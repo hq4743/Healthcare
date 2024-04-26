@@ -58,7 +58,7 @@ missing_data <- as.numeric(is.na(df))
 # Reshape the data frame to have the same dimensions as the original data
 missing_data <- matrix(missing_data, nrow = nrow(df), ncol = ncol(df))
 
-# Plot the heatmap using base R functions
+# Plot the heatmap to show that there is no missing data
 heatmap(missing_data, Rowv = NA, Colv = NA, col = "Blue", scale = "none", xlab = "", ylab = "")
 
 
@@ -151,7 +151,7 @@ ggplot(data = melt(correlation_matrix), aes(x = Var1, y = Var2, fill = value)) +
   labs(title = "Correlation Heatmap of Numerical Variables")
 
 
-# Count plot employees left and stayed 
+# Count plot of Attrition by Age
 ggplot(df, aes(x = Age, fill = factor(Attrition))) +
   geom_bar(position = "dodge") +
   labs(title = "Count plot of Attrition by Age",
@@ -179,7 +179,7 @@ ggplot(df, aes(x = JobRole, y = MonthlyIncome)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
-#Bar Graph plot for employees that left and stayed
+#Bar Graph plot for employees that left and stayed using different attributes
 library(gridExtra)
 # Create count plots for different variables
 p1 <- ggplot(df, aes(x = JobRole, fill = factor(Attrition))) +
@@ -212,7 +212,7 @@ p4 <- ggplot(df, aes(x = JobLevel, fill = factor(Attrition))) +
   theme_minimal()
 
 # Arrange plots in a grid
-grid.arrange(p1, p2, p3, p4, ncol = 2)
+grid.arrange(p1,p2,p3,p4 , ncol = 2)
 
 # Count plot employees left and stayed based on distance from home 
 # Create count plot for DistanceFromHome
@@ -317,98 +317,6 @@ print(dim(X_train))
 print(dim(X_test))
 
 
-############### Logistic Regression #####################
-# Create the logistic regression model
-model <- glm(y_train ~ ., data = cbind(y_train, X_train), family = binomial)
-
-# Make predictions on the test set
-y_pred <- predict(model, newdata = X_test, type = "response")
-print(y_pred)
-
-# Accuracy using logistic regression
-#install.packages("caret")
-library(caret)
-library(glmnet)
-
-# Create the logistic regression model
-model <- glmnet(X_train, y_train, family = "binomial")
-
-# Convert X_test to a matrix if it's not already in that format
-if (!is.matrix(X_test)) {
-  X_test <- as.matrix(X_test)
-}
-
-# Make predictions on the test set
-y_pred <- predict(model, newx = X_test, type = "response")
-
-# Convert predicted probabilities to binary predictions
-y_pred_binary <- ifelse(y_pred > 0.5, 1, 0)
-
-# Calculate the accuracy
-accuracy <- mean(y_pred_binary == y_test) * 100
-
-# Print the accuracy
-print(paste("Accuracy:", round(accuracy, 2), "%"))
-
-# Confusion matrix for logistic regression 
-# Check the lengths of y_pred_factor and y_test_factor
-print(length(y_pred))
-print(length(y_test))
-
-# Ensure that y_pred and y_test have the same length
-min_length <- min(length(y_pred), length(y_test))
-y_pred <- y_pred[1:min_length]
-y_test <- y_test[1:min_length]
-
-# Convert predicted probabilities to binary predictions
-y_pred_binary <- ifelse(y_pred > 0.5, 1, 0)
-
-# Create the confusion matrix
-cm <- confusionMatrix(factor(y_pred_binary), factor(y_test))
-
-# Print the confusion matrix
-print(cm)
-
-# Convert the confusion matrix to a data frame
-cm_df <- as.data.frame(cm$table)
-
-# Plot the confusion matrix as a heatmap
-ggplot(data = cm_df, aes(x = Reference, y = Prediction, fill = Freq)) +
-  geom_tile() +
-  geom_text(aes(label = sprintf("%d", Freq)), vjust = 1) +
-  labs(title = "Confusion Matrix",
-       x = "Actual",
-       y = "Predicted",
-       fill = "Frequency") +
-  scale_fill_gradient(low = "lightblue", high = "orange") +
-  theme_minimal()
-
-# Performance evaluation metrics
-library(pROC)
-# Calculate accuracy, recall, F-measure, sensitivity, and loss/error rate
-accuracy <- cm$overall[1]
-recall <- cm$byClass["Sensitivity"]
-f_measure <- cm$byClass["F1"]
-sensitivity <- cm$byClass["Sensitivity"]
-loss_rate <- 1 - accuracy
-
-# Calculate ROC curve
-roc_curve <- roc(y_test, y_pred)
-
-par(mfrow=c(1,1)) 
-
-# Plot ROC curve
-plot(roc_curve, main = "ROC Curve", col = "blue")
-
-# Combine metrics into a data frame
-classification_report <- data.frame(Accuracy = accuracy,
-                                    Recall = recall,
-                                    F_Measure = f_measure,
-                                    Sensitivity = sensitivity,
-                                    Loss_Rate = loss_rate)
-
-# Print the classification report
-print(classification_report)
 
 ############################## Random forest ###########################
 
@@ -453,6 +361,8 @@ evaluation_metrics <- calculate_confusion_matrix(y_test, rf_pred)
 # Print the evaluation metrics
 print("Evaluation Metrics:")
 print(evaluation_metrics)
+
+par(mfrow = c(1, 1))
 
 # Plot ROC curve
 library(pROC)
@@ -637,20 +547,6 @@ levels(y_pred) <- levels(y_test)
 cm <- confusionMatrix(y_pred, y_test)
 print("Confusion Matrix:")
 print(cm)
-
-# Plot confusion matrix as a heatmap (if desired)
-cm_df <- as.data.frame(cm$table)
-library(ggplot2)
-ggplot(data = cm_df, aes(x = Reference, y = Prediction, fill = Freq)) +
-  geom_tile() +
-  geom_text(aes(label = sprintf("%d", Freq)), vjust = 1) +
-  labs(title = "Confusion Matrix",
-       x = "Actual",
-       y = "Predicted",
-       fill = "Frequency") +
-  scale_fill_gradient(low = "lightblue", high = "orange") +
-  theme_minimal()
-
 
 
 
